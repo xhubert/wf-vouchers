@@ -1,0 +1,14 @@
+{
+  "name": "wf-vouchers",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:xhubert/wf-vouchers.git",
+  "author": "Hubert Fan <xhubert.fan@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "stripe": "^8.128.0"
+  }
+}

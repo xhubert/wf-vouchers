@@ -1,9 +1,14 @@
 // A reference to Stripe.js
 var stripe;
 
+var current;
+var orderData = {
+  items: [{ id: "photo-subscription" }],
+  currency: "usd"
+};
 $(document).ready(function () {
   $.getJSON( "./vouchers.json", function( data ) {
-    var current = data.data[0]
+    current = data.data[0]
     $('#VOUCHER_ID').text(current.id)
     $('#PRICE').text(current.amount);
     $('#DATE').text(current.date);
@@ -11,14 +16,10 @@ $(document).ready(function () {
       prefix: 'USD $ ',
       centsSeparator: '.',
       thousandsSeparator: ','
-  });
+    });
+    orderData.voucherId = current.id;
   });
 })
-
-var orderData = {
-  items: [{ id: "photo-subscription" }],
-  currency: "usd"
-};
 
 // Disable the button until we have Stripe set up on the page
 document.querySelector("button").disabled = true;

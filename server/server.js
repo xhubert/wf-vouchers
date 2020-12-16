@@ -18,44 +18,48 @@ app.get("/stripe-key", (req, res) => {
   res.send({ publishableKey: process.env.STRIPE_PUBLISHABLE_KEY });
 });
 
-const calculateOrderAmount = items => {
-  // Replace this constant with a calculation of the order's amount
-  // You should always calculate the order total on the server to prevent
-  // people from directly manipulating the amount on the client
-  return 1400;
-};
+// const calculateOrderAmount = items => {
+//   // Replace this constant with a calculation of the order's amount
+//   // You should always calculate the order total on the server to prevent
+//   // people from directly manipulating the amount on the client
+//   return 1400;
+// };
 
 app.post("/pay", async (req, res) => {
-  const { paymentMethodId, paymentIntentId, items, currency, useStripeSdk } = req.body;
-
-  const orderAmount = calculateOrderAmount(items);
-
-  try {
-    let intent;
-    if (paymentMethodId) {
-      // Create new PaymentIntent with a PaymentMethod ID from the client.
-      intent = await stripe.paymentIntents.create({
-        amount: orderAmount,
-        currency: currency,
-        payment_method: paymentMethodId,
-        confirmation_method: "manual",
-        confirm: true,
-        // If a mobile client passes `useStripeSdk`, set `use_stripe_sdk=true`
-        // to take advantage of new authentication features in mobile SDKs
-        use_stripe_sdk: useStripeSdk,
-      });
-      // After create, if the PaymentIntent's status is succeeded, fulfill the order.
-    } else if (paymentIntentId) {
-      // Confirm the PaymentIntent to finalize payment after handling a required action
-      // on the client.
-      intent = await stripe.paymentIntents.confirm(paymentIntentId);
-      // After confirm, if the PaymentIntent's status is succeeded, fulfill the order.
+  const fs = require('fs')
+  let vouchers = JSON.parse(fs.readFileSync('./../client/vouchers.json', 'utf-8'))
+  const current = vouchers.data[0];
+  const { paymentMethodId, paymentIntentId, voucherId, items, currency, useStripeSdk } = req.body;
+  if (voucherId !== current.id) {
+    res.send({ error: 'Voucher #ID is not right!' });
+  } else {
+    try {
+      let intent;
+      if (paymentMethodId) {
+        // Create new PaymentIntent with a PaymentMethod ID from the client.
+        intent = await stripe.paymentIntents.create({
+          amount: current.amount,
+          currency: currency,
+          payment_method: paymentMethodId,
+          confirmation_method: "manual",
+          confirm: true,
+          // If a mobile client passes `useStripeSdk`, set `use_stripe_sdk=true`
+          // to take advantage of new authentication features in mobile SDKs
+          use_stripe_sdk: useStripeSdk,
+        });
+        // After create, if the PaymentIntent's status is succeeded, fulfill the order.
+      } else if (paymentIntentId) {
+        // Confirm the PaymentIntent to finalize payment after handling a required action
+        // on the client.
+        intent = await stripe.paymentIntents.confirm(paymentIntentId);
+        // After confirm, if the PaymentIntent's status is succeeded, fulfill the order.
+      }
+      res.send(generateResponse(intent));
+    } catch (e) {
+      // Handle "hard declines" e.g. insufficient funds, expired card, etc
+      // See https://stripe.com/docs/declines/codes for more
+      res.send({ error: e.message });
     }
-    res.send(generateResponse(intent));
-  } catch (e) {
-    // Handle "hard declines" e.g. insufficient funds, expired card, etc
-    // See https://stripe.com/docs/declines/codes for more
-    res.send({ error: e.message });
   }
 });
 

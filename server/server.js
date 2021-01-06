@@ -13,6 +13,11 @@ app.get("/", (req, res) => {
   const path = resolve(process.env.STATIC_DIR + "/index.html");
   res.sendFile(path);
 });
+app.get("/paypal", (req, res) => {
+  // Display checkout page
+  const path = resolve(process.env.STATIC_DIR + "/paypal.html");
+  res.sendFile(path);
+});
 
 app.get("/stripe-key", (req, res) => {
   res.send({ publishableKey: process.env.STRIPE_PUBLISHABLE_KEY });

@@ -31,12 +31,21 @@ app.get("/stripe-key", (req, res) => {
 // };
 
 app.post("/pay", async (req, res) => {
-  const fs = require('fs')
-  let vouchers = JSON.parse(fs.readFileSync('./../client/vouchers.json', 'utf-8'))
+  const fs = require("fs");
+  let vouchers = JSON.parse(
+    fs.readFileSync("./../client/static/vouchers.json", "utf-8")
+  );
   const current = vouchers.data[0];
-  const { paymentMethodId, paymentIntentId, voucherId, items, currency, useStripeSdk } = req.body;
+  const {
+    paymentMethodId,
+    paymentIntentId,
+    voucherId,
+    items,
+    currency,
+    useStripeSdk,
+  } = req.body;
   if (voucherId !== current.id) {
-    res.send({ error: 'Voucher #ID is not right!' });
+    res.send({ error: "Voucher #ID is not right!" });
   } else {
     try {
       let intent;
@@ -68,7 +77,7 @@ app.post("/pay", async (req, res) => {
   }
 });
 
-const generateResponse = intent => {
+const generateResponse = (intent) => {
   // Generate a response based on the intent's status
   switch (intent.status) {
     case "requires_action":
@@ -76,13 +85,13 @@ const generateResponse = intent => {
       // Card requires authentication
       return {
         requiresAction: true,
-        clientSecret: intent.client_secret
+        clientSecret: intent.client_secret,
       };
     case "requires_payment_method":
     case "requires_source":
       // Card was not properly authenticated, suggest a new payment method
       return {
-        error: "Your card was denied, please provide a new payment method"
+        error: "Your card was denied, please provide a new payment method",
       };
     case "succeeded":
       // Payment is complete, authentication not required

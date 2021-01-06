@@ -104,4 +104,4 @@ dist
 .tern-port
 
 # customized
-client/vouchers.json
+client/static/vouchers.json

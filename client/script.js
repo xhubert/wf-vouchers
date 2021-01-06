@@ -4,44 +4,44 @@ var stripe;
 var current;
 var orderData = {
   items: [{ id: "photo-subscription" }],
-  currency: "usd"
+  currency: "usd",
 };
 $(document).ready(function () {
-  $.getJSON( "./vouchers.json", function( data ) {
-    current = data.data[0]
-    $('#VOUCHER_ID').text(current.id)
-    $('#PRICE').text(current.amount);
-    $('#DATE').text(current.date);
-    $('#PRICE').priceFormat({
-      prefix: 'USD $ ',
-      centsSeparator: '.',
-      thousandsSeparator: ','
+  $.getJSON("../static/vouchers.json", function (data) {
+    current = data.data[0];
+    $("#VOUCHER_ID").text(current.id);
+    $("#PRICE").text(current.amount);
+    $("#DATE").text(current.date);
+    $("#PRICE").priceFormat({
+      prefix: "USD $ ",
+      centsSeparator: ".",
+      thousandsSeparator: ",",
     });
     orderData.voucherId = current.id;
   });
-})
+});
 
 // Disable the button until we have Stripe set up on the page
 document.querySelector("button").disabled = true;
 
 fetch("/stripe-key")
-  .then(function(result) {
+  .then(function (result) {
     return result.json();
   })
-  .then(function(data) {
+  .then(function (data) {
     return setupElements(data);
   })
-  .then(function({ stripe, card, clientSecret }) {
+  .then(function ({ stripe, card, clientSecret }) {
     document.querySelector("button").disabled = false;
 
     var form = document.getElementById("payment-form");
-    form.addEventListener("submit", function(event) {
+    form.addEventListener("submit", function (event) {
       event.preventDefault();
       pay(stripe, card, clientSecret);
     });
   });
 
-var setupElements = function(data) {
+var setupElements = function (data) {
   stripe = Stripe(data.publishableKey);
   /* ------- Set up Stripe Elements to use in checkout form ------- */
   var elements = stripe.elements();
@@ -52,13 +52,13 @@ var setupElements = function(data) {
       fontSmoothing: "antialiased",
       fontSize: "16px",
       "::placeholder": {
-        color: "#aab7c4"
-      }
+        color: "#aab7c4",
+      },
     },
     invalid: {
       color: "#fa755a",
-      iconColor: "#fa755a"
-    }
+      iconColor: "#fa755a",
+    },
   };
 
   var card = elements.create("card", { style: style });
@@ -67,28 +67,28 @@ var setupElements = function(data) {
   return {
     stripe: stripe,
     card: card,
-    clientSecret: data.clientSecret
+    clientSecret: data.clientSecret,
   };
 };
 
-var handleAction = function(clientSecret) {
-  stripe.handleCardAction(clientSecret).then(function(data) {
+var handleAction = function (clientSecret) {
+  stripe.handleCardAction(clientSecret).then(function (data) {
     if (data.error) {
       showError("Your card was not authenticated, please try again");
     } else if (data.paymentIntent.status === "requires_confirmation") {
       fetch("/pay", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          paymentIntentId: data.paymentIntent.id
-        })
+          paymentIntentId: data.paymentIntent.id,
+        }),
       })
-        .then(function(result) {
+        .then(function (result) {
           return result.json();
         })
-        .then(function(json) {
+        .then(function (json) {
           if (json.error) {
             showError(json.error);
           } else {
@@ -102,13 +102,13 @@ var handleAction = function(clientSecret) {
 /*
  * Collect card details and pay for the order
  */
-var pay = function(stripe, card) {
+var pay = function (stripe, card) {
   changeLoadingState(true);
 
   // Collects card details and creates a PaymentMethod
   stripe
     .createPaymentMethod("card", card)
-    .then(function(result) {
+    .then(function (result) {
       if (result.error) {
         showError(result.error.message);
       } else {
@@ -117,16 +117,16 @@ var pay = function(stripe, card) {
         return fetch("/pay", {
           method: "POST",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
           },
-          body: JSON.stringify(orderData)
+          body: JSON.stringify(orderData),
         });
       }
     })
-    .then(function(result) {
+    .then(function (result) {
       return result.json();
     })
-    .then(function(response) {
+    .then(function (response) {
       if (response.error) {
         showError(response.error);
       } else if (response.requiresAction) {
@@ -141,8 +141,8 @@ var pay = function(stripe, card) {
 /* ------- Post-payment helpers ------- */
 
 /* Shows a success / error message when the payment is complete */
-var orderComplete = function(clientSecret) {
-  stripe.retrievePaymentIntent(clientSecret).then(function(result) {
+var orderComplete = function (clientSecret) {
+  stripe.retrievePaymentIntent(clientSecret).then(function (result) {
     var paymentIntent = result.paymentIntent;
     var paymentIntentJson = JSON.stringify(paymentIntent, null, 2);
 
@@ -150,7 +150,7 @@ var orderComplete = function(clientSecret) {
     document.querySelector("pre").textContent = paymentIntentJson;
 
     document.querySelector(".sr-result").classList.remove("hidden");
-    setTimeout(function() {
+    setTimeout(function () {
       document.querySelector(".sr-result").classList.add("expand");
     }, 200);
 
@@ -158,17 +158,17 @@ var orderComplete = function(clientSecret) {
   });
 };
 
-var showError = function(errorMsgText) {
+var showError = function (errorMsgText) {
   changeLoadingState(false);
   var errorMsg = document.querySelector(".sr-field-error");
   errorMsg.textContent = errorMsgText;
-  setTimeout(function() {
+  setTimeout(function () {
     errorMsg.textContent = "";
   }, 4000);
 };
 
 // Show a spinner on payment submission
-var changeLoadingState = function(isLoading) {
+var changeLoadingState = function (isLoading) {
   if (isLoading) {
     document.querySelector("button").disabled = true;
     document.querySelector("#spinner").classList.remove("hidden");

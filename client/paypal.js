@@ -96,7 +96,7 @@ $(document).ready(function () {
   } else {
     $("#my-sample-form").hide(); // hides the advanced credit and debit card payments fields if merchant isn't eligible
   }
-  $.getJSON("../client/static/vouchers.json", function (data) {
+  $.getJSON("../static/vouchers.json", function (data) {
     current = data.data[0];
     $("#VOUCHER_ID").text(current.id);
     $("#PRICE").text(current.amount);
